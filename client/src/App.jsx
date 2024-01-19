@@ -10,47 +10,91 @@ export default function App() {
   useEffect(() => {
 
     const getData = async () => {
-      try{
-        const response =await fetch('/api/todos')
+      try {
+        const response = await fetch('/api/todos')
         const data = await response.json()
         console.log(data)
         setTodos(data)
-      } catch(err){
-        console.log(err)
+      } catch(err) {
+        console.error(err)
       }
     }
-    
+
     getData()
 
   }, [])
 
-  function addToList() {
-    let item = {
-      text: input,
-      completed: false,
-      id: crypto.randomUUID() // 2188jd-293483-dfllkaksldf
-    };
+  async function addToList() {
+    try {
 
-    let newTodos = [...todos, item];
+      let todo = {
+        text: input
+      };
+  
+      console.log(JSON.stringify(todo))
+  
+      const response = await fetch('/api/todos', {
+        method: 'POST',
+        body: JSON.stringify(todo),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+  
+      const newTodo = await response.json()
+  
+      console.log(newTodo)
+  
+      setTodos([...todos, newTodo]);
+      setInput("");
 
-    setTodos(newTodos);
-    setInput("");
+    } catch(err) {
+      console.log(err)
+    }
   }
 
   function handleChange(event) {
     setInput(event.target.value);
   }
 
-  function deleteTodo(id) {
-    let newTodos = todos.filter((item) => item.id !== id);
-    setTodos(newTodos);
+  async function deleteTodo(id) {
+
+    try {
+
+      await fetch(`/api/todos/${id}`, {
+        method: 'DELETE'
+      })
+
+      let newTodos = todos.filter((todo) => todo._id !== id);
+      setTodos(newTodos);
+
+    } catch(err) {
+      console.log(err)
+    }
+    
   }
 
-  function completeTodo(id) {
-    let newTodos = todos.map((item) =>
-      item.id === id ? { ...item, completed: !item.completed } : item
-    );
-    setTodos(newTodos);
+  async function completeTodo(id) {
+
+    try {
+
+      let newTodos = [...todos]
+      let todo = newTodos.find(t => t._id === id)
+      todo.completed = !todo.completed
+    
+      await fetch(`/api/todos/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(todo),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+
+      setTodos(newTodos);
+      
+    } catch(err) {
+      console.log(err)
+    }
   }
 
   return (
